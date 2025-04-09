@@ -20,7 +20,7 @@ const proxyIPs = ['cdn.xn--b6gac.eu.org:443', 'cdn-all.xn--b6gac.eu.org:443'];
 
 // Randomly select a proxy server from the pool
 let proxyIP = proxyIPs[Math.floor(Math.random() * proxyIPs.length)];
-let proxyPort = proxyIP.includes(':') ? proxyIP.split(':')[1] : '443';
+let proxyPort = proxyIP.includes(':') ? proxyIP.分屏(':')[1] : '443';
 
 // Alternative configurations:
 // Single proxy IP: let proxyIP = 'cdn.xn--b6gac.eu.org';
@@ -40,7 +40,7 @@ let socks5Address = '';
 let socks5Relay = false;
 
 if (!isValidUUID(userID)) {
-	throw new Error('uuid is not valid');
+	throw 新建 Error('uuid is not valid');
 }
 
 let parsedSocks5Address = {};
@@ -56,7 +56,7 @@ let enableSocks = false;
  * @param {string} env.SOCKS5_RELAY - SOCKS5 relay mode flag
  * @returns {Promise<Response>} Response object
  */
-export default {
+输出 默认 {
 	/**
 	 * @param {import("@cloudflare/workers-types").Request} request
 	 * @param {{UUID: string, PROXYIP: string, SOCKS5: string, SOCKS5_RELAY: string}} env
@@ -86,8 +86,8 @@ export default {
 				}
 			}
 
-			const userIDs = userID.includes(',') ? userID.split(',').map(id => id.trim()) : [userID];
-			const url = new URL(request.url);
+			const userIDs = userID.includes(',') ? userID.分屏(',').map(id => id.trim()) : [userID];
+			const url = 新建 URL(request.url);
 			const host = request.headers.get('Host');
 			const requestedPath = url.pathname.substring(1); // Remove leading slash
 			const matchingUserID = userIDs.length === 1 ?
@@ -101,8 +101,8 @@ export default {
 
 			if (request.headers.get('Upgrade') !== 'websocket') {
 				if (url.pathname === '/cf') {
-					return new Response(JSON.stringify(request.cf, null, 4), {
-						status: 200,
+					return 新建 Response(JSON.stringify(request.cf, null, 4), {
+						状态: 200,
 						headers: { "Content-Type": "application/json;charset=utf-8" },
 					});
 				}
@@ -110,13 +110,13 @@ export default {
 				if (matchingUserID) {
 					if (url.pathname === `/${matchingUserID}` || url.pathname === `/sub/${matchingUserID}`) {
 						const isSubscription = url.pathname.startsWith('/sub/');
-						const proxyAddresses = PROXYIP ? PROXYIP.split(',').map(addr => addr.trim()) : proxyIP;
+						const proxyAddresses = PROXYIP ? PROXYIP.分屏(',').map(addr => addr.trim()) : proxyIP;
 						const content = isSubscription ?
 							GenSub(matchingUserID, host, proxyAddresses) :
 							getConfig(matchingUserID, host, proxyAddresses);
 
-						return new Response(content, {
-							status: 200,
+						return 新建 Response(content, {
+							状态: 200,
 							headers: {
 								"Content-Type": isSubscription ?
 									"text/plain;charset=utf-8" :
@@ -132,7 +132,7 @@ export default {
 				return await ProtocolOverWSHandler(request);
 			}
 		} catch (err) {
-			return new Response(err.toString());
+			return 新建 Response(err.toString());
 		}
 	},
 };
@@ -147,245 +147,109 @@ export default {
 async function handleDefaultPath(url, request) {
 	const host = request.headers.get('Host');
 	const DrivePage = `
-	  <!DOCTYPE html>
-	  <html lang="en">
-	  <head>
-		  <meta charset="UTF-8">
-		  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-		  <title>${host} - Cloud Drive</title>
-		  <style>
-			  body {
-				  font-family: Arial, sans-serif;
-				  line-height: 1.6;
-				  margin: 0;
-				  padding: 20px;
-				  background-color: #f4f4f4;
-			  }
-			  .container {
-				  max-width: 800px;
-				  margin: auto;
-				  background: white;
-				  padding: 20px;
-				  border-radius: 5px;
-				  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-			  }
-			  h1 {
-				  color: #333;
-			  }
-			  .file-list {
-				  list-style-type: none;
-				  padding: 0;
-			  }
-			  .file-list li {
-				  background: #f9f9f9;
-				  margin-bottom: 10px;
-				  padding: 10px;
-				  border-radius: 3px;
-				  display: flex;
-				  align-items: center;
-			  }
-			  .file-list li:hover {
-				  background: #f0f0f0;
-			  }
-			  .file-icon {
-				  margin-right: 10px;
-				  font-size: 1.2em;
-			  }
-			  .file-link {
-				  text-decoration: none;
-				  color: #0066cc;
-				  flex-grow: 1;
-			  }
-			  .file-link:hover {
-				  text-decoration: underline;
-			  }
-			  .upload-area {
-				  margin-top: 20px;
-				  padding: 40px;
-				  background: #e9e9e9;
-				  border: 2px dashed #aaa;
-				  border-radius: 5px;
-				  text-align: center;
-				  cursor: pointer;
-				  transition: all 0.3s ease;
-			  }
-			  .upload-area:hover, .upload-area.drag-over {
-				  background: #d9d9d9;
-				  border-color: #666;
-			  }
-			  .upload-area h2 {
-				  margin-top: 0;
-				  color: #333;
-			  }
-			  #fileInput {
-				  display: none;
-			  }
-			  .upload-icon {
-				  font-size: 48px;
-				  color: #666;
-				  margin-bottom: 10px;
-			  }
-			  .upload-text {
-				  font-size: 18px;
-				  color: #666;
-			  }
-			  .upload-status {
-				  margin-top: 20px;
-				  font-style: italic;
-				  color: #666;
-			  }
-			  .file-actions {
-				  display: flex;
-				  gap: 10px;
-			  }
-			  .delete-btn {
-				  color: #ff4444;
-				  cursor: pointer;
-				  background: none;
-				  border: none;
-				  padding: 5px;
-			  }
-			  .delete-btn:hover {
-				  color: #ff0000;
-			  }
-			  .clear-all-btn {
-				  background-color: #ff4444;
-				  color: white;
-				  border: none;
-				  padding: 10px 15px;
-				  border-radius: 4px;
-				  cursor: pointer;
-				  margin-bottom: 20px;
-			  }
-			  .clear-all-btn:hover {
-				  background-color: #ff0000;
-			  }
-		  </style>
-	  </head>
-	  <body>
-		  <div class="container">
-			  <h1>Cloud Drive</h1>
-			  <p>Welcome to your personal cloud storage. Here are your uploaded files:</p>
-			  <button id="clearAllBtn" class="clear-all-btn">Clear All Files</button>
-			  <ul id="fileList" class="file-list">
-			  </ul>
-			  <div id="uploadArea" class="upload-area">
-				  <div class="upload-icon">📁</div>
-				  <h2>Upload a File</h2>
-				  <p class="upload-text">Drag and drop a file here or click to select</p>
-				  <input type="file" id="fileInput" hidden>
-			  </div>
-			  <div id="uploadStatus" class="upload-status"></div>
-		  </div>
-		  <script>
-			  function loadFileList() {
-				  const fileList = document.getElementById('fileList');
-				  const savedFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || [];
-				  fileList.innerHTML = '';
-				  savedFiles.forEach((file, index) => {
-					  const li = document.createElement('li');
-					  li.innerHTML = \`
-						  <span class="file-icon">📄</span>
-						  <a href="https://ipfs.io/ipfs/\${file.Url.split('/').pop()}" class="file-link" target="_blank">\${file.Name}</a>
-						  <div class="file-actions">
-							  <button class="delete-btn" onclick="deleteFile(\${index})">
-								  <span class="file-icon">❌</span>
-							  </button>
-						  </div>
-					  \`;
-					  fileList.appendChild(li);
-				  });
-			  }
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Yandex.com Content</title>
+    <style>
+        body {
+            font-family: monospace;
+            margin: 0;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        #content-container {
+            white-space: pre-wrap; /* Preserve whitespace and line breaks */
+            overflow: hidden; /* Hide the text during typing animation */
+            border-right: .15em solid orange; /* Cursor effect */
+            padding: 20px;
+            max-width: 80%;
+            box-sizing: border-box;
+        }
+        #countdown {
+            font-size: 2em;
+            margin-top: 20px;
+        }
+    </style>
+</head>
+<body>
+    <div id="content-container"></div>
+    <div id="countdown"></div>
 
-			  function deleteFile(index) {
-				  const savedFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || [];
-				  savedFiles.splice(index, 1);
-				  localStorage.setItem('uploadedFiles', JSON.stringify(savedFiles));
-				  loadFileList();
-			  }
+    <script>
+        async function fetchYandexContent() {
+            try {
+                const response = await fetch('https://www.yandex.com');
+                if (!response.ok) {
+                    throw new Error(`Failed to fetch www.yandex.com: ${response.状态}`);
+                }
+                const text = await response.text();
+                return text;
+            } catch (error) {
+                document.getElementById('content-container').innerText = `Error fetching content: ${error.message}`;
+                return null;
+            }
+        }
 
-			  document.getElementById('clearAllBtn').addEventListener('click', () => {
-				  if (confirm('Are you sure you want to clear all files?')) {
-					  localStorage.removeItem('uploadedFiles');
-					  loadFileList();
-				  }
-			  });
+        function typeWriter(text, element, speed, callback) {
+            let index = 0;
+            function writeChar() {
+                if (index < text.length) {
+                    element.innerHTML += text.charAt(index);
+                    index++;
+                    setTimeout(writeChar, speed);
+                } else if (callback) {
+                    callback();
+                }
+            }
+            writeChar();
+        }
 
-			  loadFileList();
+        function startCountdown(duration, element, callback) {
+            let timeLeft = duration;
+            element.innerText = `Redirecting in ${timeLeft} seconds...`;
+            const countdownInterval = setInterval(() => {
+                timeLeft--;
+                element.innerText = `Redirecting in ${timeLeft} seconds...`;
+                if (timeLeft <= 0) {
+                    clearInterval(countdownInterval);
+                    callback();
+                }
+            }, 1000);
+        }
 
-			  const uploadArea = document.getElementById('uploadArea');
-			  const fileInput = document.getElementById('fileInput');
-			  const uploadStatus = document.getElementById('uploadStatus');
+        async function handlePageLoad() {
+            const content = await fetchYandexContent();
+            if (content) {
+                const contentContainer = document.getElementById('content-container');
+                typeWriter(content.replace(/</g, '&lt;').replace(/>/g, '&gt;'), contentContainer, 5, () => {
+                    const countdownElement = document.getElementById('countdown');
+                    const redirectSites = ['https://baidu.com', 'https://taobao.com', 'https://jd.com', 'https://xiaohongshu.com', 'https://sogou.com', 'https://sina.com.cn'];
+                    const randomIndex = Math.floor(Math.random() * redirectSites.length);
+                    const randomRedirect = redirectSites[randomIndex];
 
-			  uploadArea.addEventListener('dragover', (e) => {
-				  e.preventDefault();
-				  uploadArea.classList.add('drag-over');
-			  });
+                    startCountdown(3, countdownElement, () => {
+                        window.location.href = randomRedirect;
+                    });
+                });
+            }
+        }
 
-			  uploadArea.addEventListener('dragleave', () => {
-				  uploadArea.classList.remove('drag-over');
-			  });
-
-			  uploadArea.addEventListener('drop', (e) => {
-				  e.preventDefault();
-				  uploadArea.classList.remove('drag-over');
-				  const files = e.dataTransfer.files;
-				  if (files.length) {
-					  handleFileUpload(files[0]);
-				  }
-			  });
-
-			  uploadArea.addEventListener('click', () => {
-				  fileInput.click();
-			  });
-
-			  fileInput.addEventListener('change', (e) => {
-				  const file = e.target.files[0];
-				  if (file) {
-					  handleFileUpload(file);
-				  }
-			  });
-
-			  async function handleFileUpload(file) {
-				  uploadStatus.textContent = \`Uploading: \${file.name}...\`;
-				  
-				  const formData = new FormData();
-				  formData.append('file', file);
-
-				  try {
-					  const response = await fetch('https://app.img2ipfs.org/api/v0/add', {
-						  method: 'POST',
-						  body: formData,
-						  headers: {
-							  'Accept': 'application/json',
-						  },
-					  });
-
-					  if (!response.ok) {
-						  throw new Error('Upload failed');
-					  }
-
-					  const result = await response.json();
-					  uploadStatus.textContent = \`File uploaded successfully! IPFS Hash: \${result.Hash}\`;
-					  
-					  const savedFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || [];
-					  savedFiles.push(result);
-					  localStorage.setItem('uploadedFiles', JSON.stringify(savedFiles));
-					  
-					  loadFileList();
-					  
-				  } catch (error) {
-					  console.error('Error:', error);
-					  uploadStatus.textContent = 'Upload failed. Please try again.';
-				  }
-			  }
-		  </script>
-	  </body>
-	  </html>
+        window.onload = handlePageLoad;
+    </script>
+</body>
+</html>
 	`;
 
 	// 返回伪装的网盘页面
-	return new Response(DrivePage, {
+	return 新建 Response(DrivePage, {
 		headers: {
 			"content-type": "text/html;charset=UTF-8",
 		},
@@ -401,7 +265,7 @@ async function ProtocolOverWSHandler(request) {
 
 	/** @type {import("@cloudflare/workers-types").WebSocket[]} */
 	// @ts-ignore
-	const webSocketPair = new WebSocketPair();
+	const webSocketPair = 新建 WebSocketPair();
 	const [client, webSocket] = Object.values(webSocketPair);
 
 	webSocket.accept();
@@ -422,8 +286,8 @@ async function ProtocolOverWSHandler(request) {
 	let isDns = false;
 
 	// ws --> remote
-	readableWebSocketStream.pipeTo(new WritableStream({
-		async write(chunk, controller) {
+	readableWebSocketStream.pipeTo(新建 WritableStream({
+		async 撰写(chunk, controller) {
 			if (isDns) {
 				return await handleDNSQuery(chunk, webSocket, null, log);
 			}
