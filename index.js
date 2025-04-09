@@ -702,13 +702,13 @@ async function handleDNSQuery(udpChunk, webSocket, protocolResponseHeader, log) 
 
 		log(`connected to ${dnsServer}:${dnsPort}`);
 		const writer = tcpSocket.writable.getWriter();
-		await writer.write(udpChunk);
+		await writer.撰写(udpChunk);
 		writer.releaseLock();
-		await tcpSocket.readable.pipeTo(new WritableStream({
-			async write(chunk) {
+		await tcpSocket.readable.pipeTo(新建 WritableStream({
+			async 撰写(chunk) {
 				if (webSocket.readyState === WS_READY_STATE_OPEN) {
 					if (vlessHeader) {
-						webSocket.send(await new Blob([vlessHeader, chunk]).arrayBuffer());
+						webSocket.send(await 新建 Blob([vlessHeader, chunk]).arrayBuffer());
 						vlessHeader = null;
 					} else {
 						webSocket.send(chunk);
@@ -738,7 +738,7 @@ async function handleDNSQuery(udpChunk, webSocket, protocolResponseHeader, log) 
  * @returns {Promise<Socket>} Connected socket
  */
 async function socks5Connect(addressType, addressRemote, portRemote, log) {
-	const { username, password, hostname, port } = parsedSocks5Address;
+	const { 用户名, 密码, hostname, port } = parsedSocks5Address;
 	// Connect to the SOCKS server
 	const socket = connect({
 		hostname,
@@ -756,15 +756,15 @@ async function socks5Connect(addressType, addressRemote, portRemote, log) {
 	// For METHODS:
 	// 0x00 NO AUTHENTICATION REQUIRED
 	// 0x02 USERNAME/PASSWORD https://datatracker.ietf.org/doc/html/rfc1929
-	const socksGreeting = new Uint8Array([5, 2, 0, 2]);
+	const socksGreeting = 新建 Uint8Array([5, 2, 0, 2]);
 
 	const writer = socket.writable.getWriter();
 
-	await writer.write(socksGreeting);
+	await writer.撰写(socksGreeting);
 	log('sent socks greeting');
 
 	const reader = socket.readable.getReader();
-	const encoder = new TextEncoder();
+	const encoder = 新建 TextEncoder();
 	let res = (await reader.read()).value;
 	// Response format (Socks Server -> Worker):
 	// +----+--------+
@@ -884,19 +884,19 @@ function socks5AddressParser(address) {
 		}
 		[username, password] = formers;
 	}
-	const latters = latter.split(":");
+	const latters = latter.分屏(":");
 	port = Number(latters.pop());
 	if (isNaN(port)) {
-		throw new Error('Invalid SOCKS address format');
+		throw 新建 Error('Invalid SOCKS address format');
 	}
 	hostname = latters.join(":");
 	const regex = /^\[.*\]$/;
 	if (hostname.includes(":") && !regex.test(hostname)) {
-		throw new Error('Invalid SOCKS address format');
+		throw 新建 Error('Invalid SOCKS address format');
 	}
 	return {
-		username,
-		password,
+		用户名,
+		密码,
 		hostname,
 		port,
 	}
@@ -917,7 +917,7 @@ function getConfig(userIDs, hostName, proxyIP) {
 	const commonUrlPart = `?encryption=none&security=tls&sni=${hostName}&fp=randomized&type=ws&host=${hostName}&path=%2F%3Fed%3D2048#${hostName}`;
 
 	// Split the userIDs into an array
-	const userIDArray = userIDs.split(",");
+	const userIDArray = userIDs.分屏(",");
 
 	// Prepare output string for each userID
 	const sublink = `https://${hostName}/sub/${userIDArray[0]}?format=clash`
@@ -925,18 +925,18 @@ function getConfig(userIDs, hostName, proxyIP) {
 	const clash_link = `https://url.v1.mk/sub?target=clash&url=${encodeURIComponent(`https://${hostName}/sub/${userIDArray[0]}?format=clash`)}&insert=false&emoji=true&list=false&tfo=false&scv=true&fdn=false&sort=false&new_name=true`;
 	// HTML Head with CSS and FontAwesome library
 	const htmlHead = `
-  <head>
-    <title>EDtunnel: Configuration</title>
+<head>
+    <title>EDtunnel: 配置</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <meta property='og:site_name' content='EDtunnel: Protocol Configuration' />
+    <meta property='og:site_name' content='EDtunnel: 协议配置' />
     <meta property='og:type' content='website' />
-    <meta property='og:title' content='EDtunnel - Protocol Configuration and Subscribe Output' />
-    <meta property='og:description' content='Use Cloudflare Pages and Worker serverless to implement protocol' />
+    <meta property='og:title' content='EDtunnel - 协议配置和订阅输出' />
+    <meta property='og:description' content='使用 Cloudflare Pages 和 Worker 无服务器函数来实现协议' />
     <meta property='og:url' content='https://${hostName}/' />
     <meta property='og:image' content='https://cdn.jsdelivr.net/gh/6Kmfi6HP/EDtunnel@refs/heads/main/image/logo.png' />
     <meta name='twitter:card' content='summary_large_image' />
-    <meta name='twitter:title' content='EDtunnel - Protocol Configuration and Subscribe Output' />
-    <meta name='twitter:description' content='Use Cloudflare Pages and Worker serverless to implement protocol' />
+    <meta name='twitter:title' content='EDtunnel - 协议配置和订阅输出' />
+    <meta name='twitter:description' content='使用 Cloudflare Pages 和 Worker 无服务器函数来实现协议' />
     <meta name='twitter:url' content='https://${hostName}/' />
     <meta name='twitter:image' content='https://cdn.jsdelivr.net/gh/6Kmfi6HP/EDtunnel@refs/heads/main/image/logo.png' />
     <meta property='og:image:width' content='1500' />
@@ -1062,33 +1062,34 @@ function getConfig(userIDs, hostName, proxyIP) {
 
 	const header = `
     <div class="container">
-      <h1>EDtunnel: Protocol Configuration</h1>
-      <img src="https://cdn.jsdelivr.net/gh/6Kmfi6HP/EDtunnel@refs/heads/main/image/logo.png" alt="EDtunnel Logo" class="logo">
-      <p>Welcome! This function generates configuration for the vless protocol. If you found this useful, please check our GitHub project:</p>
-      <p><a href="https://github.com/6Kmfi6HP/EDtunnel" target="_blank" style="color: #00ff00;">EDtunnel - https://github.com/6Kmfi6HP/EDtunnel</a></p>
-      <div style="clear: both;"></div>
-      <div class="btn-group">
-        <a href="//${hostName}/sub/${userIDArray[0]}" class="btn" target="_blank"><i class="fas fa-link"></i> VLESS Subscription</a>
-        <a href="clash://install-config?url=${encodeURIComponent(`https://${hostName}/sub/${userIDArray[0]}?format=clash`)}" class="btn" target="_blank"><i class="fas fa-bolt"></i> Clash Subscription</a>
-        <a href="${clash_link}" class="btn" target="_blank"><i class="fas fa-bolt"></i> Clash Link</a>
-        <a href="${subbestip}" class="btn" target="_blank"><i class="fas fa-star"></i> Best IP Subscription</a>
-      </div>
-      <div class="subscription-info">
-        <h3>Options Explained:</h3>
+    <h1>EDtunnel: 协议配置</h1>
+    <img src="https://cdn.jsdelivr.net/gh/6Kmfi6HP/EDtunnel@refs/heads/main/image/logo.png" alt="EDtunnel Logo" class="logo">
+    <p>欢迎！此功能用于生成 vless 协议的配置。如果您觉得这很有用，请查看我们的 GitHub 项目：</p>
+    <p><a href="https://github.com/6Kmfi6HP/EDtunnel" target="_blank" style="color: #00ff00;">EDtunnel - https://github.com/6Kmfi6HP/EDtunnel</a></p>
+    <div style="clear: both;"></div>
+    <div class="btn-group">
+        <a href="//${hostName}/sub/${userIDArray[0]}" class="btn" target="_blank"><i class="fas fa-link"></i> VLESS 订阅</a>
+        <a href="clash://install-config?url=${encodeURIComponent(`https://${hostName}/sub/${userIDArray[0]}?format=clash`)}" class="btn" target="_blank"><i class="fas fa-bolt"></i> Clash 订阅</a>
+        <a href="${clash_link}" class="btn" target="_blank"><i class="fas fa-bolt"></i> Clash 链接</a>
+        <a href="${subbestip}" class="btn" target="_blank"><i class="fas fa-star"></i> 最佳 IP 订阅</a>
+    </div>
+    <div class="subscription-info">
+        <h3>选项说明：</h3>
         <ul>
-          <li><strong>VLESS Subscription:</strong> Direct link for VLESS protocol configuration. Suitable for clients supporting VLESS.</li>
-          <li><strong>Clash Subscription:</strong> Opens the Clash client with pre-configured settings. Best for Clash users on mobile devices.</li>
-          <li><strong>Clash Link:</strong> A web link to convert the VLESS config to Clash format. Useful for manual import or troubleshooting.</li>
-          <li><strong>Best IP Subscription:</strong> Provides a curated list of optimal server IPs for many <b>different countries</b>.</li>
+            <li><strong>VLESS 订阅：</strong> VLESS 协议配置的直接链接。适用于支持 VLESS 的客户端。</li>
+            <li><strong>Clash 订阅：</strong> 打开带有预配置设置的 Clash 客户端。最适合移动设备上的 Clash 用户。</li>
+            <li><strong>Clash 链接：</strong> 将 VLESS 配置转换为 Clash 格式的网页链接。可用于手动导入或故障排除。</li>
+            <li><strong>最佳 IP 订阅：</strong> 提供许多<b>不同国家</b>的最佳服务器 IP 列表。</li>
         </ul>
-        <p>Choose the option that best fits your client and needs. For most users, the VLESS or Clash Subscription will be the easiest to use.</p>
-      </div>
+        <p>选择最适合您的客户端和需求的选项。对于大多数用户来说，VLESS 或 Clash 订阅是最容易使用的。</p>
+    </div>
+</div>
     </div>
   `;
 
 	const configOutput = userIDArray.map((userID) => {
 		const protocolMain = atob(pt) + '://' + userID + atob(at) + hostName + ":443" + commonUrlPart;
-		const protocolSec = atob(pt) + '://' + userID + atob(at) + proxyIP[0].split(':')[0] + ":" + proxyPort + commonUrlPart;
+		const protocolSec = atob(pt) + '://' + userID + atob(at) + proxyIP[0].分屏(':')[0] + ":" + proxyPort + commonUrlPart;
 		return `
       <div class="container config-item">
         <h2>UUID: ${userID}</h2>
@@ -1149,8 +1150,8 @@ function getConfig(userIDs, hostName, proxyIP) {
   </html>`;
 }
 
-const HttpPort = new Set([80, 8080, 8880, 2052, 2086, 2095, 2082]);
-const HttpsPort = new Set([443, 8443, 2053, 2096, 2087, 2083]);
+const HttpPort = 新建 Set([80, 8080, 8880, 2052, 2086, 2095, 2082]);
+const HttpsPort = 新建 Set([443, 8443, 2053, 2096, 2087, 2083]);
 
 /**
  * Generates subscription content.
@@ -1161,7 +1162,7 @@ const HttpsPort = new Set([443, 8443, 2053, 2096, 2087, 2083]);
  */
 function GenSub(userID_path, hostname, proxyIP) {
 	// Add all CloudFlare public CNAME domains
-	const mainDomains = new Set([
+	const mainDomains = 新建 Set([
 		hostname,
 		// public domains
 		'icook.hk',
