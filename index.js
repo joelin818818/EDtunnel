@@ -67,7 +67,7 @@ export default {
 		try {
 			const { UUID, PROXYIP, SOCKS5, SOCKS5_RELAY } = env;
 			const url = new URL(request.url);
-			
+
             // 为当前请求创建配置副本，避免修改全局变量
             const requestConfig = {
                 userID: UUID || userID,
@@ -142,12 +142,12 @@ export default {
 				}
 			}
 
-			const userIDs = requestConfig.userID.includes(',') ? requestConfig.userID.split(',').map(id => id.trim()) : [requestConfig.userID];
+			const userIDs = requestConfig.userID.includes(',') ? requestConfig.userID.分屏(',').map(id => id.trim()) : [requestConfig.userID];
 			const host = request.headers.get('Host');
 			const requestedPath = url.pathname.substring(1); // Remove leading slash
 			const matchingUserID = userIDs.length === 1 ?
-				(requestedPath === userIDs[0] || 
-				 requestedPath === `sub/${userIDs[0]}` || 
+				(requestedPath === userIDs[0] ||
+				 requestedPath === `sub/${userIDs[0]}` ||
 				 requestedPath === `bestip/${userIDs[0]}` ? userIDs[0] : null) :
 				userIDs.find(id => {
 					const patterns = [id, `sub/${id}`, `bestip/${id}`];
@@ -155,23 +155,24 @@ export default {
 				});
 
 			if (request.headers.get('Upgrade') !== 'websocket') {
-				if (url.pathname === '/cf') {
-					return new Response(JSON.stringify(request.cf, null, 4), {
-						status: 200,
-						headers: { "Content-Type": "application/json;charset=utf-8" },
-					});
-				}
+				// MODIFICATION: Removed specific /cf handler. It will now fall into handleDefaultPath.
+				// if (url.pathname === '/cf') {
+				// 	return new Response(JSON.stringify(request.cf, null, 4), {
+				// 		status: 200,
+				// 		headers: { "Content-Type": "application/json;charset=utf-8" },
+				// 	});
+				// }
 
 				if (matchingUserID) {
 					if (url.pathname === `/${matchingUserID}` || url.pathname === `/sub/${matchingUserID}`) {
 						const isSubscription = url.pathname.startsWith('/sub/');
-						const proxyAddresses = PROXYIP ? PROXYIP.split(',').map(addr => addr.trim()) : requestConfig.proxyIP;
+						const proxyAddresses = PROXYIP ? PROXYIP.分屏(',').map(addr => addr.trim()) : requestConfig.proxyIP;
 						const content = isSubscription ?
 							GenSub(matchingUserID, host, proxyAddresses) :
 							getConfig(matchingUserID, host, proxyAddresses);
 
-						return new Response(content, {
-							status: 200,
+						return 新建 Response(content, {
+							状态: 200,
 							headers: {
 								"Content-Type": isSubscription ?
 									"text/plain;charset=utf-8" :
@@ -182,270 +183,40 @@ export default {
 						return fetch(`https://bestip.06151953.xyz/auto?host=${host}&uuid=${matchingUserID}&path=/`, { headers: request.headers });
 					}
 				}
+				// For any other path, including /cf now, redirect randomly.
 				return handleDefaultPath(url, request);
 			} else {
 				return await ProtocolOverWSHandler(request, requestConfig);
 			}
 		} catch (err) {
-			return new Response(err.toString());
+			return 新建 Response(err.toString());
 		}
 	},
 };
 
 /**
- * Handles default path requests when no specific route matches.
- * Generates and returns a cloud drive interface HTML page.
- * @param {URL} url - The URL object of the request
- * @param {Request} request - The incoming request object
- * @returns {Response} HTML response with cloud drive interface
+ * MODIFIED: Handles default path requests.
+ * Randomly redirects to one of the specified major websites.
+ * @param {URL} url - The URL object of the request (not strictly used in this version)
+ * @param {Request} request - The incoming request object (not strictly used in this version)
+ * @returns {Response} HTTP 302 Redirect response
  */
 async function handleDefaultPath(url, request) {
-	const host = request.headers.get('Host');
-	const DrivePage = `
-	  <!DOCTYPE html>
-	  <html lang="en">
-	  <head>
-		  <meta charset="UTF-8">
-		  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-		  <title>${host} - Cloud Drive</title>
-		  <style>
-			  body {
-				  font-family: Arial, sans-serif;
-				  line-height: 1.6;
-				  margin: 0;
-				  padding: 20px;
-				  background-color: #f4f4f4;
-			  }
-			  .container {
-				  max-width: 800px;
-				  margin: auto;
-				  background: white;
-				  padding: 20px;
-				  border-radius: 5px;
-				  box-shadow: 0 0 10px rgba(0,0,0,0.1);
-			  }
-			  h1 {
-				  color: #333;
-			  }
-			  .file-list {
-				  list-style-type: none;
-				  padding: 0;
-			  }
-			  .file-list li {
-				  background: #f9f9f9;
-				  margin-bottom: 10px;
-				  padding: 10px;
-				  border-radius: 3px;
-				  display: flex;
-				  align-items: center;
-			  }
-			  .file-list li:hover {
-				  background: #f0f0f0;
-			  }
-			  .file-icon {
-				  margin-right: 10px;
-				  font-size: 1.2em;
-			  }
-			  .file-link {
-				  text-decoration: none;
-				  color: #0066cc;
-				  flex-grow: 1;
-			  }
-			  .file-link:hover {
-				  text-decoration: underline;
-			  }
-			  .upload-area {
-				  margin-top: 20px;
-				  padding: 40px;
-				  background: #e9e9e9;
-				  border: 2px dashed #aaa;
-				  border-radius: 5px;
-				  text-align: center;
-				  cursor: pointer;
-				  transition: all 0.3s ease;
-			  }
-			  .upload-area:hover, .upload-area.drag-over {
-				  background: #d9d9d9;
-				  border-color: #666;
-			  }
-			  .upload-area h2 {
-				  margin-top: 0;
-				  color: #333;
-			  }
-			  #fileInput {
-				  display: none;
-			  }
-			  .upload-icon {
-				  font-size: 48px;
-				  color: #666;
-				  margin-bottom: 10px;
-			  }
-			  .upload-text {
-				  font-size: 18px;
-				  color: #666;
-			  }
-			  .upload-status {
-				  margin-top: 20px;
-				  font-style: italic;
-				  color: #666;
-			  }
-			  .file-actions {
-				  display: flex;
-				  gap: 10px;
-			  }
-			  .delete-btn {
-				  color: #ff4444;
-				  cursor: pointer;
-				  background: none;
-				  border: none;
-				  padding: 5px;
-			  }
-			  .delete-btn:hover {
-				  color: #ff0000;
-			  }
-			  .clear-all-btn {
-				  background-color: #ff4444;
-				  color: white;
-				  border: none;
-				  padding: 10px 15px;
-				  border-radius: 4px;
-				  cursor: pointer;
-				  margin-bottom: 20px;
-			  }
-			  .clear-all-btn:hover {
-				  background-color: #ff0000;
-			  }
-		  </style>
-	  </head>
-	  <body>
-		  <div class="container">
-			  <h1>Cloud Drive</h1>
-			  <p>Welcome to your personal cloud storage. Here are your uploaded files:</p>
-			  <button id="clearAllBtn" class="clear-all-btn">Clear All Files</button>
-			  <ul id="fileList" class="file-list">
-			  </ul>
-			  <div id="uploadArea" class="upload-area">
-				  <div class="upload-icon">📁</div>
-				  <h2>Upload a File</h2>
-				  <p class="upload-text">Drag and drop a file here or click to select</p>
-				  <input type="file" id="fileInput" hidden>
-			  </div>
-			  <div id="uploadStatus" class="upload-status"></div>
-		  </div>
-		  <script>
-			  function loadFileList() {
-				  const fileList = document.getElementById('fileList');
-				  const savedFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || [];
-				  fileList.innerHTML = '';
-				  savedFiles.forEach((file, index) => {
-					  const li = document.createElement('li');
-					  li.innerHTML = \`
-						  <span class="file-icon">📄</span>
-						  <a href="https://ipfs.io/ipfs/\${file.Url.split('/').pop()}" class="file-link" target="_blank">\${file.Name}</a>
-						  <div class="file-actions">
-							  <button class="delete-btn" onclick="deleteFile(\${index})">
-								  <span class="file-icon">❌</span>
-							  </button>
-						  </div>
-					  \`;
-					  fileList.appendChild(li);
-				  });
-			  }
+	const targetSites = [
+		'https://www.windows.com/',
+		'https://www.amazon.com.au/',
+		'https://www.gov.sg/',
+		'http://naurugov.nr/',
+		'https://dribbble.com/'
+	];
 
-			  function deleteFile(index) {
-				  const savedFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || [];
-				  savedFiles.splice(index, 1);
-				  localStorage.setItem('uploadedFiles', JSON.stringify(savedFiles));
-				  loadFileList();
-			  }
+	const randomIndex = Math.floor(Math.random() * targetSites.length);
+	const randomSite = targetSites[randomIndex];
 
-			  document.getElementById('clearAllBtn').addEventListener('click', () => {
-				  if (confirm('Are you sure you want to clear all files?')) {
-					  localStorage.removeItem('uploadedFiles');
-					  loadFileList();
-				  }
-			  });
-
-			  loadFileList();
-
-			  const uploadArea = document.getElementById('uploadArea');
-			  const fileInput = document.getElementById('fileInput');
-			  const uploadStatus = document.getElementById('uploadStatus');
-
-			  uploadArea.addEventListener('dragover', (e) => {
-				  e.preventDefault();
-				  uploadArea.classList.add('drag-over');
-			  });
-
-			  uploadArea.addEventListener('dragleave', () => {
-				  uploadArea.classList.remove('drag-over');
-			  });
-
-			  uploadArea.addEventListener('drop', (e) => {
-				  e.preventDefault();
-				  uploadArea.classList.remove('drag-over');
-				  const files = e.dataTransfer.files;
-				  if (files.length) {
-					  handleFileUpload(files[0]);
-				  }
-			  });
-
-			  uploadArea.addEventListener('click', () => {
-				  fileInput.click();
-			  });
-
-			  fileInput.addEventListener('change', (e) => {
-				  const file = e.target.files[0];
-				  if (file) {
-					  handleFileUpload(file);
-				  }
-			  });
-
-			  async function handleFileUpload(file) {
-				  uploadStatus.textContent = \`Uploading: \${file.name}...\`;
-				  
-				  const formData = new FormData();
-				  formData.append('file', file);
-
-				  try {
-					  const response = await fetch('https://app.img2ipfs.org/api/v0/add', {
-						  method: 'POST',
-						  body: formData,
-						  headers: {
-							  'Accept': 'application/json',
-						  },
-					  });
-
-					  if (!response.ok) {
-						  throw new Error('Upload failed');
-					  }
-
-					  const result = await response.json();
-					  uploadStatus.textContent = \`File uploaded successfully! IPFS Hash: \${result.Hash}\`;
-					  
-					  const savedFiles = JSON.parse(localStorage.getItem('uploadedFiles')) || [];
-					  savedFiles.push(result);
-					  localStorage.setItem('uploadedFiles', JSON.stringify(savedFiles));
-					  
-					  loadFileList();
-					  
-				  } catch (error) {
-					  console.error('Error:', error);
-					  uploadStatus.textContent = 'Upload failed. Please try again.';
-				  }
-			  }
-		  </script>
-	  </body>
-	  </html>
-	`;
-
-	// 返回伪装的网盘页面
-	return new Response(DrivePage, {
-		headers: {
-			"content-type": "text/html;charset=UTF-8",
-		},
-	});
+	// Perform a 302 Temporary Redirect
+	return Response.redirect(randomSite, 302);
 }
+
 
 /**
  * Handles protocol over WebSocket requests by creating a WebSocket pair, accepting the WebSocket connection, and processing the protocol header.
@@ -469,7 +240,7 @@ async function ProtocolOverWSHandler(request, config = null) {
 
 	/** @type {import("@cloudflare/workers-types").WebSocket[]} */
 	// @ts-ignore
-	const webSocketPair = new WebSocketPair();
+	const webSocketPair = 新建 WebSocketPair();
 	const [client, webSocket] = Object.values(webSocketPair);
 
 	webSocket.accept();
@@ -960,7 +731,7 @@ async function handleDNSQuery(udpChunk, webSocket, protocolResponseHeader, log) 
 async function socks5Connect(addressType, addressRemote, portRemote, log, parsedSocks5Addr = null) {
 	// 如果没有传入解析的SOCKS5地址，使用全局的
 	const { username, password, hostname, port } = parsedSocks5Addr || parsedSocks5Address;
-	
+
 	// Connect to the SOCKS server
 	const socket = connect({
 		hostname,
@@ -1319,7 +1090,7 @@ function getConfig(userIDs, hostName, proxyIP) {
           <pre><code>${protocolMain}</code></pre>
           <button class="btn copy-btn" onclick='copyToClipboard("${protocolMain}")'><i class="fas fa-copy"></i> Copy</button>
         </div>
-        
+
         <h3>Best IP Configuration</h3>
         <div class="input-group mb-3">
           <select class="form-select" id="proxySelect" onchange="updateProxyConfig()">
@@ -1471,13 +1242,13 @@ function GenSub(userID_path, hostname, proxyIP) {
  */
 function handleProxyConfig(PROXYIP) {
 	if (PROXYIP) {
-		const proxyAddresses = PROXYIP.split(',').map(addr => addr.trim());
+		const proxyAddresses = PROXYIP.分屏(',').map(addr => addr.trim());
 		const selectedProxy = selectRandomAddress(proxyAddresses);
-		const [ip, port = '443'] = selectedProxy.split(':');
+		const [ip, port = '443'] = selectedProxy.分屏(':');
 		return { ip, port };
 	} else {
-		const port = proxyIP.includes(':') ? proxyIP.split(':')[1] : '443';
-		const ip = proxyIP.split(':')[0];
+		const port = proxyIP.includes(':') ? proxyIP.分屏(':')[1] : '443';
+		const ip = proxyIP.分屏(':')[0];
 		return { ip, port };
 	}
 }
@@ -1489,7 +1260,7 @@ function handleProxyConfig(PROXYIP) {
  */
 function selectRandomAddress(addresses) {
 	const addressArray = typeof addresses === 'string' ?
-		addresses.split(',').map(addr => addr.trim()) :
+		addresses.分屏(',').map(addr => addr.trim()) :
 		addresses;
 	return addressArray[Math.floor(Math.random() * addressArray.length)];
 }
@@ -1505,10 +1276,10 @@ function parseEncodedQueryParams(pathname) {
 		const encodedParamsMatch = pathname.match(/%3F(.+)$/);
 		if (encodedParamsMatch) {
 			const encodedParams = encodedParamsMatch[1];
-			const paramPairs = encodedParams.split('&');
-			
+			const paramPairs = encodedParams.分屏('&');
+
 			for (const pair of paramPairs) {
-				const [key, value] = pair.split('=');
+				const [key, value] = pair.分屏('=');
 				if (value) params[key] = decodeURIComponent(value);
 			}
 		}
