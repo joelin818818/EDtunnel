@@ -106,7 +106,7 @@ export default {
 
 			// 验证socks5格式
 			if (urlSOCKS5) {
-				// 基本验证 - 支持逗号分隔的多个地址
+				// 基本验证 - 
 				const socks5Pattern = /^(([^:@]+:[^:@]+@)?[a-zA-Z0-9][-a-zA-Z0-9.]*(\.[a-zA-Z0-9][-a-zA-Z0-9.]*)+|\d{1,3}\.\d{1,3}\.\d{1,3}\.\d{1,3}):\d{1,5}$/;
 				const socks5Addresses = urlSOCKS5.split(',').map(addr => addr.trim());
 				const isValid = socks5Addresses.every(addr => socks5Pattern.test(addr));
